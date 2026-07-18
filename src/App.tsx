@@ -1,10 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
 import ProtectedRoute from "./routes/protectedroute"; // Fixed casing
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
 import Home from "./pages/home";
-import About from "./components/about";
 import Issues from "./components/issues";
 import Guidelines from "./components/guidelines";
 import EditorialBoard from "./pages/editorialboard";
