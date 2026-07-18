@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
-import { Scale, CreditCard, Target, ChevronDown, CheckCircle2, Users } from "lucide-react";
+import { Scale, CreditCard, Target, ChevronDown, CheckCircle2, Users, Plus, Trash2 } from "lucide-react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 
@@ -17,11 +17,24 @@ interface Trustee {
   phone?: string;
 }
 
+interface EthicsGuideline {
+  id: string;
+  title: string;
+  text: string;
+}
+
+interface Subscription {
+  id: string;
+  type: string;
+  inr: string;
+  usd: string;
+}
+
 interface JournalInfoContent {
   ethicsIntro: string;
-  ethicsGuidelines: { id: string; title: string; text: string }[];
+  ethicsGuidelines: EthicsGuideline[];
   subscriptionPaymentInfo: string;
-  subscriptions: { id: string; type: string; inr: string; usd: string }[];
+  subscriptions: Subscription[];
   goalAndMission: { trustInfo: string; journalInfo: string; publisherInfo: string };
   trustees: Trustee[];
 }
@@ -100,8 +113,6 @@ export default function JournalInformation() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists() && docSnap.data()) {
         const dbData = docSnap.data() as Partial<JournalInfoContent>;
-        // Merge with default content to ensure the new trustees array exists 
-        // even if the database document is older and missing it.
         return { ...defaultContent, ...dbData };
       }
       return defaultContent;
@@ -140,9 +151,52 @@ export default function JournalInformation() {
     }
   };
 
+  // --- Array Update Handlers ---
+  const handleTrusteeChange = (index: number, field: keyof Trustee, value: string) => {
+    const newTrustees = [...formData.trustees];
+    newTrustees[index] = { ...newTrustees[index], [field]: value };
+    setFormData({ ...formData, trustees: newTrustees });
+  };
+  const addTrustee = () => {
+    setFormData({ ...formData, trustees: [...formData.trustees, { id: Date.now().toString(), name: "", role: "", affiliation: "", email: "", phone: "" }] });
+  };
+  const removeTrustee = (index: number) => {
+    const newTrustees = [...formData.trustees];
+    newTrustees.splice(index, 1);
+    setFormData({ ...formData, trustees: newTrustees });
+  };
+
+  const handleGuidelineChange = (index: number, field: keyof EthicsGuideline, value: string) => {
+    const newGuidelines = [...formData.ethicsGuidelines];
+    newGuidelines[index] = { ...newGuidelines[index], [field]: value };
+    setFormData({ ...formData, ethicsGuidelines: newGuidelines });
+  };
+  const addGuideline = () => {
+    setFormData({ ...formData, ethicsGuidelines: [...formData.ethicsGuidelines, { id: Date.now().toString(), title: "", text: "" }] });
+  };
+  const removeGuideline = (index: number) => {
+    const newGuidelines = [...formData.ethicsGuidelines];
+    newGuidelines.splice(index, 1);
+    setFormData({ ...formData, ethicsGuidelines: newGuidelines });
+  };
+
+  const handleSubscriptionChange = (index: number, field: keyof Subscription, value: string) => {
+    const newSubs = [...formData.subscriptions];
+    newSubs[index] = { ...newSubs[index], [field]: value };
+    setFormData({ ...formData, subscriptions: newSubs });
+  };
+  const addSubscription = () => {
+    setFormData({ ...formData, subscriptions: [...formData.subscriptions, { id: Date.now().toString(), type: "", inr: "", usd: "" }] });
+  };
+  const removeSubscription = (index: number) => {
+    const newSubs = [...formData.subscriptions];
+    newSubs.splice(index, 1);
+    setFormData({ ...formData, subscriptions: newSubs });
+  };
+
   if (isLoading) {
     return (
-      <section className="flex min-h-[500px] w-full items-center justify-center bg-neutral-50">
+      <section className="flex min-h-125 w-full items-center justify-center bg-neutral-50">
         <div className="flex items-center gap-3 text-sm font-semibold tracking-widest text-neutral-400 uppercase">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-900" />
           Loading Context...
@@ -326,62 +380,172 @@ export default function JournalInformation() {
 
       </div>
 
-      {/* Basic Admin Edit Modal */}
+      {/* Advanced Admin Edit Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Edit Journal Information">
         <form onSubmit={handleSave} className="flex flex-col gap-6 text-left">
-          <div className="text-sm text-neutral-500 mb-4 bg-neutral-50 p-4 rounded-lg border border-neutral-200">
-            For simplicity in this unified view, editing is enabled for primary text sections. To edit detailed arrays (like the 10 point guidelines), contact developers to implement nested array builders if needed.
-          </div>
+          
+          <div className="max-h-[65vh] overflow-y-auto pr-3 flex flex-col gap-8 custom-scrollbar">
+            
+            {/* GENERAL TEXT SECTION */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-neutral-900 text-lg border-b border-neutral-200 pb-2">General Information</h4>
+              <div>
+                <label className="mb-1 block text-sm font-bold text-neutral-700">Ethics Introduction</label>
+                <textarea 
+                  value={formData.ethicsIntro} onChange={(e) => setFormData({...formData, ethicsIntro: e.target.value})}
+                  rows={3} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
 
-          <div className="max-h-[50vh] overflow-y-auto pr-2 flex flex-col gap-6">
-            <div>
-              <label className="mb-1 block text-sm font-bold text-neutral-700">Ethics Introduction</label>
-              <textarea 
-                value={formData.ethicsIntro} onChange={(e) => setFormData({...formData, ethicsIntro: e.target.value})}
-                rows={4} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
-              />
+              <div>
+                <label className="mb-1 block text-sm font-bold text-neutral-700">Payment Instructions</label>
+                <textarea 
+                  value={formData.subscriptionPaymentInfo} onChange={(e) => setFormData({...formData, subscriptionPaymentInfo: e.target.value})}
+                  rows={2} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-bold text-neutral-700">Payment Instructions</label>
-              <textarea 
-                value={formData.subscriptionPaymentInfo} onChange={(e) => setFormData({...formData, subscriptionPaymentInfo: e.target.value})}
-                rows={3} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
-              />
-            </div>
-
-            <div className="border-t border-neutral-200 pt-4">
-              <h4 className="mb-3 font-bold text-neutral-900">Goal & Mission</h4>
+            {/* GOAL & MISSION SECTION */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-neutral-900 text-lg border-b border-neutral-200 pb-2">Goal & Mission</h4>
               
-              <label className="mb-1 block text-xs font-bold text-neutral-700">Trust Information</label>
-              <textarea 
-                value={formData.goalAndMission.trustInfo} 
-                onChange={(e) => setFormData({...formData, goalAndMission: {...formData.goalAndMission, trustInfo: e.target.value}})}
-                rows={4} className="w-full mb-3 rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
-              />
+              <div>
+                <label className="mb-1 block text-xs font-bold text-neutral-700">Trust Information</label>
+                <textarea 
+                  value={formData.goalAndMission.trustInfo} 
+                  onChange={(e) => setFormData({...formData, goalAndMission: {...formData.goalAndMission, trustInfo: e.target.value}})}
+                  rows={3} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
 
-              <label className="mb-1 block text-xs font-bold text-neutral-700">Journal Origins</label>
-              <textarea 
-                value={formData.goalAndMission.journalInfo} 
-                onChange={(e) => setFormData({...formData, goalAndMission: {...formData.goalAndMission, journalInfo: e.target.value}})}
-                rows={4} className="w-full mb-3 rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
-              />
+              <div>
+                <label className="mb-1 block text-xs font-bold text-neutral-700">Journal Origins</label>
+                <textarea 
+                  value={formData.goalAndMission.journalInfo} 
+                  onChange={(e) => setFormData({...formData, goalAndMission: {...formData.goalAndMission, journalInfo: e.target.value}})}
+                  rows={3} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
 
-              <label className="mb-1 block text-xs font-bold text-neutral-700">Publisher Information</label>
-              <textarea 
-                value={formData.goalAndMission.publisherInfo} 
-                onChange={(e) => setFormData({...formData, goalAndMission: {...formData.goalAndMission, publisherInfo: e.target.value}})}
-                rows={4} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
-              />
+              <div>
+                <label className="mb-1 block text-xs font-bold text-neutral-700">Publisher Information</label>
+                <textarea 
+                  value={formData.goalAndMission.publisherInfo} 
+                  onChange={(e) => setFormData({...formData, goalAndMission: {...formData.goalAndMission, publisherInfo: e.target.value}})}
+                  rows={3} className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
             </div>
+
+            {/* TRUSTEES SECTION */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                <h4 className="font-bold text-neutral-900 text-lg">Trustees</h4>
+                <button type="button" onClick={addTrustee} className="flex items-center gap-1 rounded bg-neutral-100 px-3 py-1.5 text-xs font-bold text-neutral-700 hover:bg-neutral-200 transition-colors">
+                  <Plus size={14} /> Add Trustee
+                </button>
+              </div>
+              
+              {formData.trustees.map((trustee, index) => (
+                <div key={trustee.id} className="relative rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                  <button type="button" onClick={() => removeTrustee(index)} className="absolute right-3 top-3 text-red-500 hover:text-red-700 p-1 bg-white rounded-md border border-neutral-200 shadow-sm" title="Remove Trustee">
+                    <Trash2 size={16} />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                    <div>
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Name</label>
+                      <input type="text" value={trustee.name} onChange={(e) => handleTrusteeChange(index, "name", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Role</label>
+                      <input type="text" value={trustee.role} onChange={(e) => handleTrusteeChange(index, "role", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Affiliation</label>
+                      <input type="text" value={trustee.affiliation} onChange={(e) => handleTrusteeChange(index, "affiliation", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Email (Optional)</label>
+                      <input type="email" value={trustee.email || ""} onChange={(e) => handleTrusteeChange(index, "email", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Phone (Optional)</label>
+                      <input type="text" value={trustee.phone || ""} onChange={(e) => handleTrusteeChange(index, "phone", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* SUBSCRIPTIONS SECTION */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                <h4 className="font-bold text-neutral-900 text-lg">Subscriptions</h4>
+                <button type="button" onClick={addSubscription} className="flex items-center gap-1 rounded bg-neutral-100 px-3 py-1.5 text-xs font-bold text-neutral-700 hover:bg-neutral-200 transition-colors">
+                  <Plus size={14} /> Add Subscription
+                </button>
+              </div>
+              
+              {formData.subscriptions.map((sub, index) => (
+                <div key={sub.id} className="relative rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                  <button type="button" onClick={() => removeSubscription(index)} className="absolute right-3 top-3 text-red-500 hover:text-red-700 p-1 bg-white rounded-md border border-neutral-200 shadow-sm" title="Remove Subscription">
+                    <Trash2 size={16} />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mt-4">
+                    <div className="md:col-span-6">
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Subscription Type</label>
+                      <input type="text" value={sub.type} onChange={(e) => handleSubscriptionChange(index, "type", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div className="md:col-span-3">
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">INR (₹)</label>
+                      <input type="text" value={sub.inr} onChange={(e) => handleSubscriptionChange(index, "inr", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div className="md:col-span-3">
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">USD ($)</label>
+                      <input type="text" value={sub.usd} onChange={(e) => handleSubscriptionChange(index, "usd", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ETHICS GUIDELINES SECTION */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                <h4 className="font-bold text-neutral-900 text-lg">Ethics Guidelines</h4>
+                <button type="button" onClick={addGuideline} className="flex items-center gap-1 rounded bg-neutral-100 px-3 py-1.5 text-xs font-bold text-neutral-700 hover:bg-neutral-200 transition-colors">
+                  <Plus size={14} /> Add Guideline
+                </button>
+              </div>
+              
+              {formData.ethicsGuidelines.map((guide, index) => (
+                <div key={guide.id} className="relative rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                  <button type="button" onClick={() => removeGuideline(index)} className="absolute right-3 top-3 text-red-500 hover:text-red-700 p-1 bg-white rounded-md border border-neutral-200 shadow-sm" title="Remove Guideline">
+                    <Trash2 size={16} />
+                  </button>
+                  <div className="flex flex-col gap-3 mt-4">
+                    <div>
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Guideline Title</label>
+                      <input type="text" value={guide.title} onChange={(e) => handleGuidelineChange(index, "title", e.target.value)} className="w-full rounded border border-neutral-300 p-2 text-sm font-semibold focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-neutral-600 block mb-1">Description</label>
+                      <textarea value={guide.text} onChange={(e) => handleGuidelineChange(index, "text", e.target.value)} rows={3} className="w-full rounded border border-neutral-300 p-2 text-sm focus:border-neutral-900 focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
 
-          <div className="flex justify-end gap-3 border-t border-neutral-100 pt-4">
+          <div className="flex justify-end gap-3 border-t border-neutral-100 pt-4 mt-2">
             <button type="button" onClick={() => setIsModalOpen(false)} disabled={isSaving} className="rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100">
               Cancel
             </button>
-            <button type="submit" disabled={isSaving} className="rounded-lg bg-neutral-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-70">
-              {isSaving ? "Saving..." : "Save Changes"}
+            <button type="submit" disabled={isSaving} className="rounded-lg bg-neutral-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-70 transition-colors">
+              {isSaving ? "Saving..." : "Save All Changes"}
             </button>
           </div>
         </form>
