@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
@@ -17,7 +17,10 @@ interface HeroContent {
   issn: string;
   headline: string;
   description: string;
-  imageUrl: string;
+  imageUrl1: string;
+  imageUrl2: string;
+  imageUrl3: string;
+  activeIndex: number;
 }
 
 const defaultContent: HeroContent = {
@@ -25,7 +28,10 @@ const defaultContent: HeroContent = {
   issn: "ISSN 0975-7139 & 2394-9309",
   headline: "An international journal devoted to research and education advances",
   description: "<p>The <strong>Aryan Research and Education Trust (Registration No. 2655)</strong> is an organization that promotes high academic achievement for all students at all levels, particularly in the field of Mathematics & Statistical Science, Operation Research (O.R.) Management and economics, Computer Science, Engineering Physics and Information Technology.</p><p>We were founded for one reason and one reason alone: to push and cajole our country toward educational advance.</p>",
-  imageUrl: journalCover 
+  imageUrl1: journalCover,
+  imageUrl2: "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?q=80&w=600&auto=format&fit=crop",
+  imageUrl3: "https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=600&auto=format&fit=crop",
+  activeIndex: 0,
 };
 
 export default function Hero() {
@@ -46,7 +52,7 @@ export default function Hero() {
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists() && docSnap.data()) {
-        return docSnap.data() as HeroContent;
+        return { ...defaultContent, ...docSnap.data() } as HeroContent;
       }
       return defaultContent;
     } catch (error) {
@@ -95,6 +101,16 @@ export default function Hero() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Image alternating logic
+  const images = useMemo(() => [content.imageUrl1, content.imageUrl2, content.imageUrl3], [content]);
+
+  const handleImageClick = () => {
+    setContent((prev) => ({
+      ...prev,
+      activeIndex: (prev.activeIndex + 1) % images.length,
+    }));
   };
 
   if (isLoading) {
@@ -163,14 +179,38 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* FIXED: Changed max-w-lg to max-w-sm to drastically reduce the image size while keeping it centered */}
-        <div className="relative w-full max-w-sm mx-auto pb-16 lg:pb-0">
+        {/* Stacked Images Section */}
+        <div 
+          className="relative w-full max-w-sm mx-auto pb-16 lg:pb-0 cursor-pointer"
+          onClick={handleImageClick}
+        >
           <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-500/40 to-red-600/40 opacity-50 blur-2xl"></div>
-          <img 
-            src={content.imageUrl} 
-            alt="Aryabhatta Journal Concept" 
-            className="relative z-10 w-full aspect-[3/4] object-contain rounded-2xl border border-white/10 shadow-2xl bg-white"
-          />
+          
+          {images.map((imgUrl, index) => {
+            const isActive = index === content.activeIndex;
+            const isNext = index === (content.activeIndex + 1) % images.length;
+            const isLast = index === (content.activeIndex + 2) % images.length;
+
+            let stackingClass = "z-10 opacity-100 scale-100";
+            let transformClass = "";
+
+            if (isNext) {
+              stackingClass = "z-0 opacity-80 scale-95";
+              transformClass = "translate-x-4 translate-y-4";
+            } else if (isLast) {
+              stackingClass = "z-[-1] opacity-60 scale-90";
+              transformClass = "translate-x-8 translate-y-8";
+            }
+
+            return (
+              <img
+                key={index}
+                src={imgUrl}
+                alt={`Aryabhatta Journal Stack Image ${index + 1}`}
+                className={`absolute top-0 left-0 ${isActive ? 'relative' : 'absolute'} transition-all duration-300 ease-in-out w-full aspect-[3/4] object-contain rounded-2xl border border-white/10 shadow-2xl bg-white ${stackingClass} ${transformClass}`}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -181,14 +221,34 @@ export default function Hero() {
       >
         <form onSubmit={handleSave} className="flex flex-col gap-6 text-left">
           
-          <div className="flex justify-center">
-             <div className="w-full max-w-sm">
-                <ImageUploader 
-                  currentImageUrl={formData.imageUrl} 
-                  onUploadSuccess={(url) => setFormData({...formData, imageUrl: url})} 
-                  folder="hero"
-                />
-             </div>
+          <div>
+            <h3 className="mb-3 block text-sm font-medium text-stone-700">Journal Image Stack</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="mb-1 block text-xs text-stone-500">Image 1 (Main)</label>
+                  <ImageUploader 
+                      currentImageUrl={formData.imageUrl1} 
+                      onUploadSuccess={(url) => setFormData({ ...formData, imageUrl1: url })} 
+                      folder="hero"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-stone-500">Image 2</label>
+                  <ImageUploader 
+                      currentImageUrl={formData.imageUrl2} 
+                      onUploadSuccess={(url) => setFormData({ ...formData, imageUrl2: url })} 
+                      folder="hero"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-stone-500">Image 3</label>
+                  <ImageUploader 
+                      currentImageUrl={formData.imageUrl3} 
+                      onUploadSuccess={(url) => setFormData({ ...formData, imageUrl3: url })} 
+                      folder="hero"
+                  />
+                </div>
+            </div>
           </div>
 
           <div>
