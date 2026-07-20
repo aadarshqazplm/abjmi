@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, type FormEvent, type ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import { Download, FileText, Mail, ArrowRight, ExternalLink } from "lucide-react";
 import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
@@ -78,10 +79,12 @@ export default function LatestIssues() {
         id: doc.id,
       })) as JournalIssue[];
       
+      // Sort by volume descending, then by issue number descending
       fetchedIssues.sort((a, b) => {
-        const timeA = a.date ? new Date(a.date).getTime() : 0;
-        const timeB = b.date ? new Date(b.date).getTime() : 0;
-        return timeB - timeA;
+        const volA = parseInt(a.volume) || 0;
+        const volB = parseInt(b.volume) || 0;
+        if (volB !== volA) return volB - volA;
+        return (parseInt(b.issueNumber) || 0) - (parseInt(a.issueNumber) || 0);
       });
 
       return fetchedIssues;
@@ -224,10 +227,11 @@ export default function LatestIssues() {
                       {!issue.isVisible && <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-100 px-2 py-0.5 rounded">Hidden</span>}
                     </div>
                     <h4 className="text-lg font-bold text-neutral-900">
-                     Issue {issue.issueNumber}
+                  
+                            Volume {issue.volume}
                     </h4>
                     <p className="text-sm font-medium text-neutral-500">
-                       Volume {issue.volume}
+                   Issue {issue.issueNumber}
                     </p>
                   </div>
                   
@@ -256,8 +260,8 @@ export default function LatestIssues() {
 
             {/* 5th Card: View All Issues Link (only renders if there are more than 4 issues) */}
             {displayIssues.length > 4 && (
-              <a 
-                href="/issues"
+              <Link 
+                to="/issues"
                 className="group flex min-h-40 flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-neutral-200 bg-transparent p-5 text-center transition-all hover:border-neutral-900 hover:bg-neutral-900"
               >
                 <div className="mb-3 rounded-full bg-neutral-100 p-3 transition-colors group-hover:bg-neutral-800">
@@ -266,7 +270,7 @@ export default function LatestIssues() {
                 <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 group-hover:text-neutral-100">
                   View All Archives
                 </span>
-              </a>
+              </Link>
             )}
 
           </div>

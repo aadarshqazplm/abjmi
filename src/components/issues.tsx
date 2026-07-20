@@ -72,7 +72,13 @@ export default function Issues() {
       const querySnapshot = await getDocs(collection(db, "journalIssues"));
       
       if (querySnapshot.empty) {
-        return fallbackIssues;
+        // Also sort fallback issues just in case
+        return [...fallbackIssues].sort((a, b) => {
+          const volA = parseInt(a.volume) || 0;
+          const volB = parseInt(b.volume) || 0;
+          if (volB !== volA) return volB - volA;
+          return (parseInt(b.issueNumber) || 0) - (parseInt(a.issueNumber) || 0);
+        });
       }
 
       const fetchedIssues = querySnapshot.docs.map((doc) => ({
@@ -80,11 +86,20 @@ export default function Issues() {
         id: doc.id,
       })) as JournalIssue[];
       
-      // Safely sort even if some issues don't have dates (pushes dateless to bottom)
+      // Sort by volume descending, then by issue number descending
       fetchedIssues.sort((a, b) => {
-        const timeA = a.date ? new Date(a.date).getTime() : 0;
-        const timeB = b.date ? new Date(b.date).getTime() : 0;
-        return timeB - timeA;
+        const volA = parseInt(a.volume) || 0;
+        const volB = parseInt(b.volume) || 0;
+        
+        // Primary sort: Volume (Descending)
+        if (volB !== volA) {
+          return volB - volA;
+        }
+        
+        // Secondary sort: Issue Number (Descending) if volumes are equal
+        const issueA = parseInt(a.issueNumber) || 0;
+        const issueB = parseInt(b.issueNumber) || 0;
+        return issueB - issueA;
       });
 
       return fetchedIssues;
@@ -94,6 +109,7 @@ export default function Issues() {
     }
   }, []);
 
+  // Restore the missing useEffect to load data when the component mounts
   useEffect(() => {
     let isMounted = true;
     
@@ -127,7 +143,7 @@ export default function Issues() {
     return () => {
       isMounted = false;
     };
-  }, [loadDatabaseIssues]); 
+  }, [loadDatabaseIssues]);
 
   const openAddModal = () => {
     setFormData(emptyIssue);
@@ -250,7 +266,7 @@ export default function Issues() {
                     <div>
                       <div className="inline-flex items-center gap-1.5 rounded-md bg-red-950 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
                         <FileText size={14} />
-                      Issue {issue.issueNumber},  Vol {issue.volume}
+                     Vol {issue.volume},   Issue {issue.issueNumber}
                       </div>
                       
                       {/* Safely render the date only if it exists */}
@@ -358,7 +374,8 @@ export default function Issues() {
                 type="text" 
                 value={formData.volume}
                 onChange={(e) => setFormData({...formData, volume: e.target.value})}
-                 placeholder="e.g., 2"
+                
+                  placeholder="e.g., 15"
                 className="w-full rounded-lg border border-stone-300 p-2.5 text-sm outline-none focus:border-red-950 focus:ring-1 focus:ring-red-950"
                 required
               />
@@ -370,7 +387,7 @@ export default function Issues() {
                 value={formData.issueNumber}
                 onChange={(e) => setFormData({...formData, issueNumber: e.target.value})}
                
-                placeholder="e.g., 15"
+                placeholder="e.g., 2"
                 className="w-full rounded-lg border border-stone-300 p-2.5 text-sm outline-none focus:border-red-950 focus:ring-1 focus:ring-red-950"
                 required
               />
