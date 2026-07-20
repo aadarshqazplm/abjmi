@@ -180,8 +180,9 @@ export default function Hero() {
         </div>
 
         {/* Stacked Images Section */}
+       {/* Stacked Images Section */}
         <div 
-          className="relative w-full max-w-sm mx-auto pb-16 lg:pb-0 cursor-pointer"
+          className="relative w-full max-w-xl mx-auto pb-16 lg:pb-0 cursor-pointer" 
           onClick={handleImageClick}
         >
           <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-500/40 to-red-600/40 opacity-50 blur-2xl"></div>
@@ -207,7 +208,7 @@ export default function Hero() {
                 key={index}
                 src={imgUrl}
                 alt={`Aryabhatta Journal Stack Image ${index + 1}`}
-                className={`absolute top-0 left-0 ${isActive ? 'relative' : 'absolute'} transition-all duration-300 ease-in-out w-full aspect-[3/4] object-contain rounded-2xl border border-white/10 shadow-2xl bg-white ${stackingClass} ${transformClass}`}
+                className={`absolute top-0 left-0 ${isActive ? 'relative' : 'absolute'} transition-all duration-300 ease-in-out w-full aspect-[3/2] object-contain p-2 rounded-2xl border border-stone-200 shadow-2xl bg-white ${stackingClass} ${transformClass}`}
               />
             );
           })}
