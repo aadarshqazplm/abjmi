@@ -137,7 +137,7 @@ export default function LatestIssues() {
 
   if (isLoading) {
     return (
-      <section className="flex min-h-[400px] w-full items-center justify-center bg-neutral-50 border-y border-neutral-200">
+      <section className="flex min-h-100 w-full items-center justify-center bg-neutral-50 border-y border-neutral-200">
         <div className="flex items-center gap-3 text-sm font-semibold tracking-widest text-neutral-400 uppercase">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-900" />
           Loading...
@@ -224,10 +224,10 @@ export default function LatestIssues() {
                       {!issue.isVisible && <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-100 px-2 py-0.5 rounded">Hidden</span>}
                     </div>
                     <h4 className="text-lg font-bold text-neutral-900">
-                      Volume {issue.volume}
+                     Issue {issue.issueNumber}
                     </h4>
                     <p className="text-sm font-medium text-neutral-500">
-                      Issue {issue.issueNumber}
+                       Volume {issue.volume}
                     </p>
                   </div>
                   
@@ -258,7 +258,7 @@ export default function LatestIssues() {
             {displayIssues.length > 4 && (
               <a 
                 href="/issues"
-                className="group flex min-h-[160px] flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-neutral-200 bg-transparent p-5 text-center transition-all hover:border-neutral-900 hover:bg-neutral-900"
+                className="group flex min-h-40 flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-neutral-200 bg-transparent p-5 text-center transition-all hover:border-neutral-900 hover:bg-neutral-900"
               >
                 <div className="mb-3 rounded-full bg-neutral-100 p-3 transition-colors group-hover:bg-neutral-800">
                   <ArrowRight size={24} className="text-neutral-600 transition-transform group-hover:translate-x-1 group-hover:text-white" />
@@ -385,7 +385,7 @@ export default function LatestIssues() {
             </button>
             <button 
               type="submit" disabled={isSaving}
-              className="flex min-w-[120px] items-center justify-center rounded-lg bg-neutral-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-neutral-800 disabled:opacity-70"
+              className="flex min-w-30 items-center justify-center rounded-lg bg-neutral-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-neutral-800 disabled:opacity-70"
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>

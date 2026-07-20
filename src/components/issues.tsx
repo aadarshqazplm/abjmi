@@ -250,7 +250,7 @@ export default function Issues() {
                     <div>
                       <div className="inline-flex items-center gap-1.5 rounded-md bg-red-950 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
                         <FileText size={14} />
-                        Vol {issue.volume}, Issue {issue.issueNumber}
+                      Issue {issue.issueNumber},  Vol {issue.volume}
                       </div>
                       
                       {/* Safely render the date only if it exists */}
@@ -358,7 +358,7 @@ export default function Issues() {
                 type="text" 
                 value={formData.volume}
                 onChange={(e) => setFormData({...formData, volume: e.target.value})}
-                placeholder="e.g., 15"
+                 placeholder="e.g., 2"
                 className="w-full rounded-lg border border-stone-300 p-2.5 text-sm outline-none focus:border-red-950 focus:ring-1 focus:ring-red-950"
                 required
               />
@@ -369,7 +369,8 @@ export default function Issues() {
                 type="text" 
                 value={formData.issueNumber}
                 onChange={(e) => setFormData({...formData, issueNumber: e.target.value})}
-                placeholder="e.g., 2"
+               
+                placeholder="e.g., 15"
                 className="w-full rounded-lg border border-stone-300 p-2.5 text-sm outline-none focus:border-red-950 focus:ring-1 focus:ring-red-950"
                 required
               />
@@ -428,7 +429,7 @@ export default function Issues() {
             <button 
               type="submit" 
               disabled={isSaving}
-              className="flex min-w-[120px] items-center justify-center rounded-lg bg-red-950 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-red-900 disabled:opacity-70"
+              className="flex min-w-30 items-center justify-center rounded-lg bg-red-950 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-colors hover:bg-red-900 disabled:opacity-70"
             >
               {isSaving ? "Saving..." : "Save Issue"}
             </button>
